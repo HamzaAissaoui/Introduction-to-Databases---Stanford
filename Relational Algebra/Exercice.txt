@@ -1,0 +1,62 @@
+DataBase:
+    Person(name, age, gender)       // name is a key
+    Frequents(name, pizzeria)       // [name,pizzeria] is a key
+    Eats(name, pizza)               // [name,pizza] is a key
+    Serves(pizzeria, pizza, price)  // [pizzeria,pizza] is a key
+
+-------------------------------------------------------------------------------------------------------------------
+1. Find all pizzas eaten by at least one female over the age of 20.
+
+\project_{pizza}(Eats \join (Person \diff \select_{age<20 or gender='male'}Person));
+
+-------------------------------------------------------------------------------------------------------------------
+2. Find the names of all females who eat at least one pizza served by Straw Hat. 
+(Note: The pizza need not be eaten at Straw Hat.)
+
+\project_{name}(\select_{gender='female'}Person \join (Eats \join \select_{pizzeria='Straw Hat'}Serves)) 
+
+-------------------------------------------------------------------------------------------------------------------
+3. Find all pizzerias that serve at least one pizza for less than $10 that either Amy or Fay (or both) eat.
+
+\project_{pizzeria}(\select_{price<10}Serves \join (Eats \join \select_{name='Amy' or name='Fay'}Person))
+
+-------------------------------------------------------------------------------------------------------------------
+4. Find all pizzerias that serve at least one pizza for less than $10 that both Amy and Fay eat.
+
+(\project_{pizzeria}(\select_{price<10}Serves \join (Eats \join \select_{name='Amy'}Person))) 
+\intersect 
+(\project_{pizzeria}(\select_{price<10}Serves \join (Eats \join \select_{name='Fay'}Person)))
+
+-------------------------------------------------------------------------------------------------------------------
+5. Find the names of all people who eat at least one pizza served by Dominos but who do not frequent Dominos.
+
+\project_{name}((Eats \join \select_{pizzeria='Dominos'}Serves)) 
+\diff 
+(\project_{name}(Eats \join \select_{pizzeria='Dominos'}Frequents))
+
+-------------------------------------------------------------------------------------------------------------------
+6. Find all pizzas that are eaten only by people younger than 24, or that cost less than $10 everywhere they're served.
+
+(\project_{pizza}(\select_{age<24}(Eats \join person)) 
+\diff 
+\project_{pizza}(\select_{age>=24}(Eats \join person))) 
+\union 
+(\project_{pizza}(\select_{price<10}serves) 
+\diff 
+\project_{pizza}(\select_{price>=10}serves))
+
+-------------------------------------------------------------------------------------------------------------------
+7. Find the age of the oldest person (or people) who eat mushroom pizza.
+
+\project_{age}(\project_{age}(\select_{age=24}Person \join \select_{pizza='mushroom'}Eats)
+\intersect
+\rename_{age}(\project_{age2}(\select_{age1>age2}
+((\select_{pizza='mushroom'}Eats \join \rename_{name1,age1,gender1}Person) \cross (\select_{pizza='mushroom'}Eats \join \rename_{name2,age2,gender2}Person ))))) 
+
+-------------------------------------------------------------------------------------------------------------------
+8. Find all pizzerias that serve only pizzas eaten by people over 30.
+
+\project_{pizzeria}((\project_{pizza}(\select_{age>30}(Eats \join person))) \join serves) 
+\intersect 
+\project_{pizzeria}(\select_{pizzeria='Chicago Pizza'}serves)
+
